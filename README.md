@@ -1,5 +1,3 @@
-Hi I'm Camille Le Bihan ✷
-<br><br>
-Lived in Paris, New York, London, Rotterdam, Boston, Barcelona. 
-<br>
-Focus on Finance × (Deep)Tech × Venture.
+<a href="https://YOUR-USERNAME.github.io/YOUR-USERNAME/">
+  <img src="assets/hero.svg" alt="Camille Le Bihan — Curiosity compounds. USA, France, UK, Spain, Netherlands. Finance, venture and deep tech. Working on growth, innovation, scale and strategy — Paris-based." width="100%"/>
+</a>
