@@ -25,19 +25,24 @@ h1{left:40px;top:96px;font-weight:350;font-size:54px;line-height:56px;letter-spa
 <script>
 (() => {
   const C = 20, COLS = 50, ROWS = 31;
-  const g = ["00000000000000000000000000000000000000000000000000", "00000000000000000000000000000000000000000000000000", "00000000000000000000000000000000000000000000000000", "00000000000000000000000000000000000000000000000000", "00000000000000000000000000000000000000000000001001", "00000000000000000000000000000000100000000100100011", "00000000000000000000000000000001000011000010101111", "00000000000000000000000000000000000010011111111111", "00000000000000000000000000000000111111101111011111", "00000000000000000000000000000100011111111111111111", "00000000000000000000000000100111111111111111111111", "00000000000000000000000001101111111111111111111111", "00000000000000000000000011001111111111111111111111", "00000000010111101000000111111111111111111111111111", "00000010111111111111111111111111111111111111111110", "00000001111111111111111111111111111111111111111000", "10000001111111111111111111111111111111111111111100", "01000111111111111111111111111111111111111111110010", "00100011111111111111111111111111111111111111110010", "11110111111111111111111111111111111111111111100000", "11101111111111111111111111110110011011111100000000", "11111111111111111111111110001000001000011000000000", "11111110111111111111110001000000000000000000000000", "11111111111111011111000000000000000000000000000000", "11111111111011111110000000000000000000000000000000", "11111111101011001100000000000000000000000000000000", "11111101110000000000000000000000000000000000000000", "11111111101000000000000000000000000000000000000000", "11110110110000000000000000000000000000000000000000", "01011100100000000000000000000000000000000000000000", "00100000000000000000000000000000000000000000000000"].map(r => [...r].map(Number));
+  const LIFE = 8000;
+  const g = Array.from({length: ROWS}, () => new Array(COLS).fill(-1e9));
+  const on = (c, r, now) => r >= 0 && c >= 0 && r < ROWS && c < COLS && now - g[r][c] < LIFE;
   const protect = (c, r) => r < 3 || (c >= 1 && c < 20 && r >= 3 && r < 12) || (c >= 33 && r >= 23);
   const cv = document.getElementById('cv'), x = cv.getContext('2d'); x.scale(2, 2);
   let hover = null;
   function draw() {
+    const now = performance.now();
     x.fillStyle = '#E4E4E2'; x.fillRect(0, 0, 1000, 620);
-    x.font = '430 8.5px IT, sans-serif'; x.textBaseline = 'alphabetic';
+    x.font = '430 8.5px IT, sans-serif';
     for (let r = 0; r < ROWS; r++) for (let c = 0; c < COLS; c++) {
-      if (g[r][c]) { x.fillStyle = '#202020'; x.fillRect(c * C, r * C, C, C); continue; }
-      let n = 0; for (let dy = -1; dy <= 1; dy++) for (let dx = -1; dx <= 1; dx++) if ((dx || dy) && g[r + dy] && g[r + dy][c + dx]) n++;
+      const age = now - g[r][c];
+      if (age < LIFE) { x.globalAlpha = age > LIFE - 250 ? (LIFE - age) / 250 : 1; x.fillStyle = '#202020'; x.fillRect(c * C, r * C, C, C); x.globalAlpha = 1; continue; }
+      let n = 0; for (let dy = -1; dy <= 1; dy++) for (let dx = -1; dx <= 1; dx++) if ((dx || dy) && on(c + dx, r + dy, now)) n++;
       if (n) { x.fillStyle = '#8C8C88'; x.fillText(n, c * C + 3, r * C + 9.5); }
     }
     if (hover) { x.save(); x.shadowColor = '#1C2A8F'; x.shadowBlur = 26; x.fillStyle = 'rgba(28,42,143,.55)'; x.fillRect(hover[0] * C - 10, hover[1] * C - 10, C + 20, C + 20); x.restore(); }
+    requestAnimationFrame(draw);
   }
   const stage = document.getElementById('stage'), cur = document.getElementById('cur');
   function paint(px, py) {
@@ -46,17 +51,15 @@ h1{left:40px;top:96px;font-weight:350;font-size:54px;line-height:56px;letter-spa
     for (let dy = -1; dy <= 1; dy++) for (let dx = -1; dx <= 1; dx++) {
       const cc = c + dx, rr = r + dy;
       if (cc < 0 || rr < 0 || cc >= COLS || rr >= ROWS || protect(cc, rr)) continue;
-      if (Math.abs(dx) + Math.abs(dy) < 2 || Math.random() < .35) g[rr][cc] = 1;
+      if ((!dx && !dy) || (Math.abs(dx) + Math.abs(dy) === 1 && Math.random() < .4)) g[rr][cc] = performance.now();
     }
     cur.style.transform = `translate(${px - 2}px,${py - 2}px)`;
-    draw();
   }
   let scale = 1;
   stage.addEventListener('pointermove', e => { const b = stage.getBoundingClientRect(); paint((e.clientX - b.left) / scale, (e.clientY - b.top) / scale); });
-  stage.addEventListener('pointerleave', () => { hover = null; cur.style.transform = 'translate(-100px,-100px)'; draw(); });
-  stage.addEventListener('dblclick', () => location.reload());
+  stage.addEventListener('pointerleave', () => { hover = null; cur.style.transform = 'translate(-100px,-100px)'; });
   const fit = () => { scale = Math.min(innerWidth / 1000, innerHeight / 620) * .96; stage.style.transform = `scale(${scale})`; };
   addEventListener('resize', fit); fit();
-  document.fonts.ready.then(draw); draw();
+  requestAnimationFrame(draw);
 })();
 </script></body></html>
